@@ -111,6 +111,18 @@ playwright install chromium
 uv pip install -e ".[all]"
 ```
 
+### Alternative: Conda/Mamba Installation
+
+[Conda](https://docs.conda.io/) or [Mamba](https://mamba.readthedocs.io/) can be used for environment management:
+
+```bash
+# Using conda
+conda install -c conda-forge notebooklm-py
+
+# Using mamba (faster)
+mamba install -c conda-forge notebooklm-py
+```
+
 ### Development Installation
 
 For contributors or testing unreleased features:
