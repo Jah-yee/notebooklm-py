@@ -13,9 +13,8 @@ import asyncio
 import json
 import logging
 import os
-import time
-import uuid
 import re
+import time
 from functools import wraps
 from typing import TYPE_CHECKING
 
@@ -285,25 +284,25 @@ async def _resolve_partial_id(
     # Check if it looks like a UUID - only skip resolution for actual UUIDs
     # UUIDs have a specific format: 8-4-4-4-12 hex chars with dashes
     # Example: 03abe51c-d8df-43ba-ae2d-0efe02c71c4a
-    is_uuid_format = bool(re.match(
-        r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-        partial_id.lower()
-    ))
+    is_uuid_format = bool(
+        re.match(
+            r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", partial_id.lower()
+        )
+    )
 
     # Skip resolution only for actual UUIDs (full format)
     if len(partial_id) >= 36 and is_uuid_format:
         return partial_id
 
     items = await list_fn()
-    
+
     # First, try to match by ID prefix
     matches = [item for item in items if item.id.lower().startswith(partial_id.lower())]
 
     # If no ID match, try to match by title (case-insensitive substring)
     if len(matches) == 0:
         matches = [
-            item for item in items 
-            if item.title and partial_id.lower() in item.title.lower()
+            item for item in items if item.title and partial_id.lower() in item.title.lower()
         ]
 
     if len(matches) == 1:
@@ -321,15 +320,17 @@ async def _resolve_partial_id(
         # Check if matches are from title vs ID
         id_matches = [m for m in matches if m.id.lower().startswith(partial_id.lower())]
         title_matches = [m for m in matches if m.title and partial_id.lower() in m.title.lower()]
-        
+
         lines = []
         if id_matches and title_matches:
-            lines.append(f"Ambiguous input '{partial_id}' matches {len(id_matches)} {entity_name}(s) by ID and {len(title_matches)} by title:")
+            lines.append(
+                f"Ambiguous input '{partial_id}' matches {len(id_matches)} {entity_name}(s) by ID and {len(title_matches)} by title:"
+            )
         elif id_matches:
             lines.append(f"Ambiguous ID '{partial_id}' matches {len(matches)} {entity_name}s:")
         else:
             lines.append(f"Ambiguous title '{partial_id}' matches {len(matches)} {entity_name}s:")
-            
+
         for item in matches[:5]:
             title = item.title or "(untitled)"
             match_src = "ID" if item.id.lower().startswith(partial_id.lower()) else "title"
