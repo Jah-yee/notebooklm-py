@@ -22,15 +22,18 @@ class ResearchAPI:
 
     Usage:
         async with NotebookLMClient.from_storage() as client:
-            # Start research
-            task = await client.research.start(notebook_id, "quantum computing")
+            # Start research (deep mode for comprehensive results)
+            task = await client.research.start(notebook_id, "quantum computing", mode="deep")
 
             # Poll for results
             result = await client.research.poll(notebook_id)
             if result["status"] == "completed":
-                # Import selected sources
+                # Import selected sources AND preserve the deep research report
                 imported = await client.research.import_sources(
-                    notebook_id, task["task_id"], result["sources"][:5]
+                    notebook_id,
+                    task["task_id"],
+                    result["sources"][:5],
+                    report_id=task["report_id"],  # Preserve deep research report
                 )
     """
 
@@ -198,6 +201,7 @@ class ResearchAPI:
         task_id: str,
         sources: list[dict[str, str]],
         allow_title_only: bool = False,
+        report_id: str | None = None,
     ) -> list[dict[str, str]]:
         """Import selected research sources into the notebook.
 
@@ -207,6 +211,9 @@ class ResearchAPI:
             sources: List of sources to import, each with 'url' and 'title'.
             allow_title_only: If True, allow importing sources without URLs
                 (e.g., deep research sources that only have titles).
+            report_id: Optional report ID from deep research to preserve the
+                research report in the notebook. If provided, the deep research
+                report will be preserved after importing sources.
 
         Returns:
             List of imported sources with 'id' and 'title'.
@@ -270,7 +277,9 @@ class ResearchAPI:
                     2,
                 ])
 
-        params = [None, [1], task_id, notebook_id, source_array]
+        # Build params: [report_id, [1], task_id, notebook_id, source_array]
+        # report_id is at position 0 to preserve deep research reports
+        params = [report_id, [1], task_id, notebook_id, source_array]
 
         result = await self._core.rpc_call(
             RPCMethod.IMPORT_RESEARCH,
